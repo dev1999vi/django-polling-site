@@ -1,4 +1,5 @@
 from typing import Any
+from django.utils import timezone
 from django.db.models.query import QuerySet
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -49,15 +50,27 @@ class IndexView(generic.ListView):
     context_object_name = "latest_questions_list"
     
     def get_queryset(self) -> QuerySet[Any]:
-        return Question.objects.order_by("-pub_date")
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")
     
 class DetailView(generic.DetailView):
     model = Question
     template_name = 'polls/show.html'
     
+    def get_queryset(self) -> QuerySet[Any]:
+        """
+        Excludes any questions that aren't published yet.
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
+    
 class ResultView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
+    
+    def get_queryset(self) -> QuerySet[Any]:
+        """
+        Excludes any questions that aren't published yet.
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
 
 def vote(request, question_id):
     # return HttpResponse(f"You are voting for the question: {question_id}")
